@@ -306,43 +306,7 @@ resolver.define('clearTasks', async () => {
   return { success: true };
 });
 
-// Initialize with sample pending tasks for demo (no fake Jira keys)
-resolver.define('initMockData', async () => {
-  const existing = await storage.get('tasks');
-  if (existing && existing.length > 0) {
-    return { success: true, message: 'Data already exists' };
-  }
-  
-  // Only create PENDING tasks - no fake "sent" tasks with fake Jira keys
-  const mockTasks = [
-    {
-      id: 'task-demo-1',
-      title: 'Review Q4 budget proposal',
-      description: 'Review the Q4 budget proposal and send feedback by Friday',
-      source: 'email',
-      url: 'https://mail.google.com',
-      priority: 'high',
-      deadline: new Date(Date.now() + 1000 * 60 * 60 * 24 * 2).toISOString().split('T')[0],
-      status: 'pending',
-      createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      createdVia: 'donotmiss'
-    },
-    {
-      id: 'task-demo-2',
-      title: 'Schedule design team meeting',
-      description: 'Schedule a follow-up meeting with the design team about the new dashboard',
-      source: 'chat',
-      url: 'https://teams.microsoft.com',
-      priority: 'medium',
-      status: 'pending',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-      createdVia: 'donotmiss'
-    }
-  ];
-  
-  await storage.set('tasks', mockTasks);
-  return { success: true, message: 'Mock data initialized' };
-});
+
 
 // ============================================================
 // Flask Backend Integration

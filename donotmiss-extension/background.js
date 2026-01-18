@@ -94,11 +94,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 // Flask backend endpoint (change for production)
-const BACKEND_URL = 'http://localhost:5000/api';
+const BACKEND_URL = 'https://donotmiss-backend.onrender.com/api';
 
-// Submit task to Flask backend
+// Submit task to Flask backend and send to Jira
 async function submitTaskToBackend(task) {
-  console.log('📤 Sending task to backend:', task);
+  console.log('📤 Sending task to backend and Jira:', task);
 
   // Map extension payload to Flask API expected shape
   const payload = {
@@ -108,31 +108,32 @@ async function submitTaskToBackend(task) {
     source: task.source || 'web',
     url: task.url,
     priority: task.priority || 'medium',
-    status: 'pending',
+    deadline: task.deadline || null,
     createdAt: task.timestamp || new Date().toISOString(),
     metadata: {
-      deadline: task.deadline,
       userApproved: task.userApproved
     }
   };
 
-  const response = await fetch(`${BACKEND_URL}/tasks`, {
+  // Use the create-and-send endpoint to create task AND send to Jira in one call
+  const response = await fetch(`${BACKEND_URL}/tasks/create-and-send`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
 
+  const result = await response.json();
+
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Backend error: ${response.status} - ${errorText}`);
+    throw new Error(result.error || `Backend error: ${response.status}`);
   }
 
-  const created = await response.json();
-  console.log('✅ Task created:', created);
+  console.log('✅ Task created and sent to Jira:', result);
 
   return {
-    id: created.id,
-    status: created.status,
-    jiraKey: created.id // placeholder until Jira integration
+    id: result.id,
+    status: result.status,
+    jiraKey: result.jiraKey,
+    jiraUrl: result.jiraUrl
   };
 }

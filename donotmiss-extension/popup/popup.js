@@ -7,31 +7,6 @@ const BACKEND_URL = 'https://donotmiss-backend.onrender.com/api';
 const WAKEUP_CHECK_INTERVAL = 3000; // 3 seconds
 const WAKEUP_TIMEOUT = 10000; // 10 seconds per request timeout
 
-// Mock AI-detected tasks for demo (used as fallback)
-const MOCK_TASKS = [
-  {
-    id: 1,
-    text: "Review the Q4 budget proposal and send feedback by Friday",
-    source: "email",
-    url: "https://mail.google.com/mail/u/0/#inbox/abc123",
-    detectedAt: new Date(Date.now() - 1000 * 60 * 5).toISOString() // 5 min ago
-  },
-  {
-    id: 2,
-    text: "Schedule a follow-up meeting with the design team about the new dashboard",
-    source: "chat",
-    url: "https://teams.microsoft.com/chat/xyz789",
-    detectedAt: new Date(Date.now() - 1000 * 60 * 15).toISOString() // 15 min ago
-  },
-  {
-    id: 3,
-    text: "Update the API documentation before the release next week",
-    source: "web",
-    url: "https://confluence.atlassian.com/docs/api",
-    detectedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString() // 30 min ago
-  }
-];
-
 // Check if backend is awake
 async function checkBackendHealth() {
   const controller = new AbortController();
@@ -142,14 +117,10 @@ async function loadTasks() {
     console.warn('Could not reach backend, using local storage:', e.message);
   }
 
-  // If backend returned nothing, fall back to local storage / mock
+  // If backend returned nothing, check local storage
   if (tasks.length === 0) {
     const result = await chrome.storage.local.get('pendingTasks');
-    tasks = result.pendingTasks;
-    if (!tasks || tasks.length === 0) {
-      tasks = MOCK_TASKS;
-      await chrome.storage.local.set({ pendingTasks: tasks });
-    }
+    tasks = result.pendingTasks || [];
   }
 
   if (tasks.length === 0) {

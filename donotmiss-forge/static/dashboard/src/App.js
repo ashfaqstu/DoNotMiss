@@ -30,7 +30,6 @@ function App() {
   const loadTasks = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      await invoke('initMockData');
       const data = await invoke('getTasks');
       setTasks(data || []);
     } catch (error) {
