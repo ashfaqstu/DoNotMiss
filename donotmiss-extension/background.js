@@ -96,9 +96,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Flask backend endpoint (change for production)
 const BACKEND_URL = 'https://donotmiss-backend.onrender.com/api';
 
-// Submit task to Flask backend and send to Jira
+// Submit task to Flask backend for storage
+// The Jira Forge app will sync from the backend and create Jira issues
 async function submitTaskToBackend(task) {
-  console.log('📤 Sending task to backend and Jira:', task);
+  console.log('📤 Sending task to backend:', task);
 
   // Map extension payload to Flask API expected shape
   const payload = {
@@ -111,12 +112,13 @@ async function submitTaskToBackend(task) {
     deadline: task.deadline || null,
     createdAt: task.timestamp || new Date().toISOString(),
     metadata: {
-      userApproved: task.userApproved
+      userApproved: task.userApproved,
+      capturedVia: 'extension'
     }
   };
 
-  // Use the create-and-send endpoint to create task AND send to Jira in one call
-  const response = await fetch(`${BACKEND_URL}/tasks/create-and-send`, {
+  // Store task in backend - Jira Forge app will sync and create issues
+  const response = await fetch(`${BACKEND_URL}/tasks`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -128,12 +130,12 @@ async function submitTaskToBackend(task) {
     throw new Error(result.error || `Backend error: ${response.status}`);
   }
 
-  console.log('✅ Task created and sent to Jira:', result);
+  console.log('✅ Task stored in backend:', result);
+  console.log('📋 Open Jira DoNotMiss panel to sync and create Jira issues');
 
   return {
     id: result.id,
     status: result.status,
-    jiraKey: result.jiraKey,
-    jiraUrl: result.jiraUrl
+    message: 'Task saved! Open Jira to sync and create issue.'
   };
 }

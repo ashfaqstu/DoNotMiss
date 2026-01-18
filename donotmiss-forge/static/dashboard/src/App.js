@@ -82,8 +82,8 @@ function App() {
     try {
       const result = await invoke('sendToJira', { taskId, assigneeId });
       if (result.success) {
-        // Also mark as sent on Flask backend (fire and forget)
-        invoke('markSentOnBackend', { taskId }).catch(() => {});
+        // Mark as sent on Flask backend with the Jira key
+        invoke('markSentOnBackend', { taskId, jiraKey: result.jiraKey }).catch(() => {});
         refreshTasks();
       } else {
         alert('Failed: ' + (result.error || 'Unknown error'));

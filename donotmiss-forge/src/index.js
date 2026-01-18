@@ -399,12 +399,13 @@ resolver.define('syncFromBackend', async () => {
 // Mark task as sent on Flask backend after Jira creation
 resolver.define('markSentOnBackend', async ({ payload }) => {
   const backendUrl = await storage.get('flaskBackendUrl') || FLASK_BACKEND_URL;
-  const { taskId } = payload;
+  const { taskId, jiraKey } = payload;
   
   try {
-    const response = await fetch(`${backendUrl}/api/tasks/${taskId}/send`, {
+    const response = await fetch(`${backendUrl}/api/tasks/${taskId}/mark-sent`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jiraKey })
     });
     
     return { success: response.ok };
