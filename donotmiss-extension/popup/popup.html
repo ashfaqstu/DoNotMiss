@@ -8,23 +8,6 @@
 </head>
 <body>
   <div class="popup">
-    <!-- Wake-up Loading Screen -->
-    <div id="wakeup-screen" class="wakeup-screen" style="display: none;">
-      <div class="wakeup-content">
-        <div class="wakeup-spinner"></div>
-        <h2 class="wakeup-title">Waking up the backend.</h2>
-        <p class="wakeup-message">
-          Our backend is hosted on Render's free tier and may take a moment to spin up after being idle.
-        </p>
-        <p class="wakeup-submessage">Please wait while we warm up the servers</p>
-        <p class="wakeup-time">This usually takes 30-60 seconds</p>
-        <p class="wakeup-attempt" id="wakeup-attempt">Attempt 1 • Checking every 3 seconds...</p>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <div id="main-content">
-
     <!-- Header -->
     <header class="header">
       <div class="logo">
@@ -49,26 +32,18 @@
 
     <!-- Main content -->
     <main class="content">
-      <!-- Empty state (hidden when tasks exist) -->
-      <div id="empty-state" class="empty-state" style="display: none;">
+      <!-- Empty state - coming soon message -->
+      <div class="empty-state">
         <div class="empty-icon">
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
             <circle cx="24" cy="24" r="20" stroke="#DFE1E6" stroke-width="2"/>
-            <path d="M24 16v8M24 28v2" stroke="#DFE1E6" stroke-width="2" stroke-linecap="round"/>
+            <path d="M18 24h12M24 18v12" stroke="#DFE1E6" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </div>
-        <h2>No pending tasks</h2>
-        <p>Select text on any page and right-click to capture a task.</p>
-      </div>
-
-      <!-- Pending tasks list -->
-      <div id="tasks-list" class="tasks-list">
-        <div class="section-header">
-          <span class="section-title">Detected Tasks</span>
-          <span class="badge" id="task-count">3</span>
-        </div>
-        <div id="tasks-container">
-          <!-- Tasks will be rendered here -->
+        <h2>AI Task Detection</h2>
+        <p>Coming soon! This panel will show automatically detected tasks from your browsing.</p>
+        <div class="hint">
+          <strong>For now:</strong> Select text on any page, right-click, and choose "Add to DoNotMiss" to capture tasks.
         </div>
       </div>
     </main>
@@ -76,11 +51,10 @@
     <!-- Footer -->
     <footer class="footer">
       <div class="status">
-        <span class="status-dot" id="status-dot"></span>
-        <span id="status-text">Ready to sync with Jira</span>
+        <span class="status-dot"></span>
+        <span>Open Jira to view and manage tasks</span>
       </div>
     </footer>
-    </div>
   </div>
 
   <script src="popup.js"></script>

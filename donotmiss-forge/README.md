@@ -82,18 +82,24 @@ Tasks stored in Forge Storage:
 
 | Function | Description |
 |----------|-------------|
-| `getTasks` | Get all tasks |
+| `getTasks` | Get all tasks with Jira status sync |
 | `addTask` | Add a new task |
 | `sendToJira` | Send task to Jira (creates issue) |
-| `deleteTask` | Delete a task |
-| `initMockData` | Initialize demo data |
+| `deleteTask` | Delete a task permanently |
+| `declineTask` | Move task to trash |
+| `restoreTask` | Restore declined task |
+| `clearTasks` | Clear all tasks |
+| `syncFromBackend` | Sync tasks from Flask backend |
+| `markSentOnBackend` | Mark task as sent on backend |
 
-## Demo Mode
+## Workflow
 
-The app auto-initializes with mock data for demo purposes.
-To reset: clear Forge storage and reload.
+1. Capture tasks using the Chrome extension (right-click → Add to DoNotMiss)
+2. Tasks are stored in the Flask backend
+3. Click "Sync" in the Jira panel to pull pending tasks
+4. Review and click "Send to Jira" to create Jira issues
 
 ## Connecting to Chrome Extension
 
-The Chrome extension sends tasks to this Forge app.
-Update the extension's `background.js` endpoint to your Forge app URL.
+The Chrome extension sends tasks to the Flask backend.
+The Forge app syncs from the backend and creates Jira issues.

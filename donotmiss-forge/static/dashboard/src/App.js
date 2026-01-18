@@ -9,20 +9,24 @@ function App() {
   const [users, setUsers] = useState([]);
   const [actionLoading, setActionLoading] = useState({});
   const [showAssignModal, setShowAssignModal] = useState(null);
-  const [syncing, setSyncing] = useState(false);
-  const [syncStatus, setSyncStatus] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadTasks();
     loadUsers();
+    
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      loadTasks(false);
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const openIssue = async (issueKey) => {
     try {
-      // Use router.navigate for internal Jira navigation
       await router.navigate(`/browse/${issueKey}`);
     } catch (e) {
-      // Fallback: open in new tab
       window.open(`https://ahammadshawki8.atlassian.net/browse/${issueKey}`, '_blank');
     }
   };
@@ -38,13 +42,10 @@ function App() {
     if (showLoading) setLoading(false);
   };
 
-  const refreshTasks = async () => {
-    try {
-      const data = await invoke('getTasks');
-      setTasks(data || []);
-    } catch (error) {
-      console.error('Failed to refresh tasks:', error);
-    }
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadTasks(false);
+    setRefreshing(false);
   };
 
   const loadUsers = async () => {
@@ -56,35 +57,12 @@ function App() {
     }
   };
 
-  // Sync tasks from Flask backend
-  const handleSyncFromBackend = async () => {
-    setSyncing(true);
-    setSyncStatus(null);
-    try {
-      const result = await invoke('syncFromBackend');
-      if (result.success) {
-        setSyncStatus({ type: 'success', message: `Synced! Added ${result.added} new task(s).` });
-        await refreshTasks();
-      } else {
-        setSyncStatus({ type: 'error', message: result.error || 'Sync failed' });
-      }
-    } catch (error) {
-      console.error('Sync failed:', error);
-      setSyncStatus({ type: 'error', message: 'Could not connect to backend' });
-    }
-    setSyncing(false);
-    // Clear status after 3 seconds
-    setTimeout(() => setSyncStatus(null), 3000);
-  };
-
   const handleSendToJira = async (taskId, assigneeId = null) => {
     setActionLoading(prev => ({ ...prev, [taskId]: 'sending' }));
     try {
       const result = await invoke('sendToJira', { taskId, assigneeId });
       if (result.success) {
-        // Mark as sent on Flask backend with the Jira key
-        invoke('markSentOnBackend', { taskId, jiraKey: result.jiraKey }).catch(() => {});
-        refreshTasks();
+        await loadTasks(false);
       } else {
         alert('Failed: ' + (result.error || 'Unknown error'));
       }
@@ -99,9 +77,7 @@ function App() {
     setActionLoading(prev => ({ ...prev, [taskId]: 'declining' }));
     try {
       await invoke('declineTask', { taskId });
-      // Also delete from Flask backend (fire and forget)
-      invoke('deleteFromBackend', { taskId }).catch(() => {});
-      refreshTasks();
+      await loadTasks(false);
     } catch (error) {
       console.error('Failed to decline task:', error);
     }
@@ -112,7 +88,7 @@ function App() {
     setActionLoading(prev => ({ ...prev, [taskId]: 'restoring' }));
     try {
       await invoke('restoreTask', { taskId });
-      refreshTasks();
+      await loadTasks(false);
     } catch (error) {
       console.error('Failed to restore task:', error);
     }
@@ -123,7 +99,7 @@ function App() {
     setActionLoading(prev => ({ ...prev, [taskId]: 'deleting' }));
     try {
       await invoke('deleteTask', { taskId });
-      refreshTasks();
+      await loadTasks(false);
     } catch (error) {
       console.error('Failed to delete task:', error);
     }
@@ -133,7 +109,7 @@ function App() {
   const handleClearAll = async () => {
     if (window.confirm('Clear all tasks? This cannot be undone.')) {
       await invoke('clearTasks');
-      refreshTasks();
+      await loadTasks(false);
     }
   };
 
@@ -193,22 +169,16 @@ function App() {
             <div className="stat stat-done"><span className="stat-value">{sentCount}</span><span className="stat-label">Sent</span></div>
           </div>
           <button 
-            className={`btn btn-sync ${syncing ? 'syncing' : ''}`} 
-            onClick={handleSyncFromBackend} 
-            disabled={syncing}
-            title="Sync tasks from Flask backend"
+            className={`btn btn-sync ${refreshing ? 'syncing' : ''}`} 
+            onClick={handleRefresh} 
+            disabled={refreshing}
+            title="Refresh tasks from backend"
           >
-            {syncing ? '🔄' : '⬇️'} Sync
+            {refreshing ? '🔄' : '🔄'} Refresh
           </button>
           <button className="btn btn-text" onClick={handleClearAll} title="Clear all tasks">🗑️</button>
         </div>
       </header>
-
-      {syncStatus && (
-        <div className={`sync-status ${syncStatus.type}`}>
-          {syncStatus.type === 'success' ? '✅' : '❌'} {syncStatus.message}
-        </div>
-      )}
 
       <div className="filters">
         <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
